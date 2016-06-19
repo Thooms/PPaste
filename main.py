@@ -2,7 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, abort, mak
 import os
 import random
 import string
-import pygments.lexers
+from pygments.lexers import get_all_lexers, get_lexer_by_name
+from pygments.formatters import HtmlFormatter
+from pygments import highlight
 import json
 
 app = Flask(__name__)
@@ -60,7 +62,12 @@ def fetch_paste(name):
 
 # Syntax highlighting management
 
-LEXERS = sorted(pygments.lexers.get_all_lexers(), key=lambda l: l[0].lower())
+LEXERS = sorted(get_all_lexers(), key=lambda l: l[0].lower())
+
+def highlight_paste(paste):
+    lexer = get_lexer_by_name(paste['hl_alias'])
+    formatter = HtmlFormatter(linenos=True, cssclass='source')
+    return highlight(paste['content'], lexer, formatter), formatter.get_style_defs('.source')
 
 # Routing and logic
 
@@ -90,9 +97,8 @@ def view_paste(paste_name=''):
 
     try:
         paste = fetch_paste(paste_name)
-        resp = make_response(paste['content'], 200)
-        resp.headers['Content-Type'] = 'text/plain'
-        return resp
+        highlighted_content, css = highlight_paste(paste)
+        return render_template('paste.html', paste=paste, content=highlighted_content, css=css)
     except PPasteException:
         abort(404)
 

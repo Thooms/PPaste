@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ paste['title'] }}</title>
+    <style>
+      {{ css }}
+    </style>
+  </head>
+
+  <body>
+    <p>PPaste! - {{ paste['title'] }}</p>
+
+    {{ content|safe }}
+
+  </body>
+</html>
