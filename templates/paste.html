@@ -1,16 +1,13 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>{{ paste['title'] }}</title>
-    <style>
-      {{ css }}
-    </style>
-  </head>
+{% extends 'base.html' %}
 
-  <body>
-    <p>PPaste! - {{ paste['title'] }}</p>
+{% block title %}{{ paste['title'] }}{% endblock %}
 
-    {{ content|safe }}
+{% block additional_css %}
+<style>{{ css }}</style>
+{% endblock %}
 
-  </body>
-</html>
+{% block main %}
+<div class="container">
+  {{ content|safe }}
+</div>
+{% endblock %}

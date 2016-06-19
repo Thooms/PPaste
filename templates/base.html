@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PPaste!</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
+
+    {% block additional_css %}{% endblock %}
+  </head>
+
+  <body>
+      <div class="container">
+	  <h1>PPaste! {% block title %}{% endblock %}</h1>
+      </div>
+
+      {% block main %}{% endblock %}
+  </body>
+</html>
