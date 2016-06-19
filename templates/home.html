@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>PPaste</title>
+  </head>
+
+  <body>
+    <p>PPaste!</p>
+
+    <form action="{{ url_for('submit') }}" method="POST">
+      Title (optional) <input type="text" name="title">
+      <br>
+      <textarea rows="50" cols="80" name="pastecontent" placeholder="Put your code here" autofocus></textarea>
+      <br>
+      <input type="submit" value="Go!">
+    </form>
+  </body>
+</html>
