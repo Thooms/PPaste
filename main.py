@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, abort, mak
 import os
 import random
 import string
+import pygments.lexers
+import json
 
 app = Flask(__name__)
 
@@ -22,28 +24,29 @@ PASTE_LOCATION = os.path.join(os.getcwd(), 'pastes')
 def rand_name():
     return ''.join(random.choice(ALPHABET) for _ in range(PASTE_NAME_LEN))
 
-def register_paste(name, content, title):
-    '''Saves a paste into the filesystem. Raise an error if not possible.'''
-
+def check_pastes_directory():
     if not os.path.isdir(PASTE_LOCATION):
         raise PPasteException('Pastes directory ({}) does not exist'.format(PASTE_LOCATION))
 
-    paste_path = os.path.join(PASTE_LOCATION, name)
+def register_paste(paste_data):
+    '''Saves a paste into the filesystem. Raise an error if not possible.'''
+
+    check_pastes_directory()
+
+    paste_path = os.path.join(PASTE_LOCATION, paste_data['name'])
 
     if os.path.exists(paste_path):
         raise PPasteException('Paste file ({}) already exists'.format(paste_path))
 
     try:
-        with open(paste_path, 'w') as f:
-            f.write(content)
+        json.dump(paste_data, open(paste_path, 'w'))
     except OSError(e):
         raise PPasteException('Cannot register paste - {}'.format(e))
 
 def fetch_paste(name):
     '''Fetches a paste by name in the filesystem.'''
 
-    if not os.path.isdir(PASTE_LOCATION):
-        raise PPasteException('Pastes directory ({}) does not exist'.format(PASTE_LOCATION))
+    check_pastes_directory()
 
     paste_path = os.path.join(PASTE_LOCATION, name)
 
@@ -51,26 +54,32 @@ def fetch_paste(name):
         raise PPasteException('Paste file ({}) does not exists'.format(paste_path))
 
     try:
-        with open(paste_path, 'r') as f:
-            content =  f.read()
-        return content
+        return json.load(open(paste_path, 'r'))
     except OSError(e):
         raise PPasteException('Cannot register paste - {}'.format(e))
+
+# Syntax highlighting management
+
+LEXERS = sorted(pygments.lexers.get_all_lexers(), key=lambda l: l[0].lower())
 
 # Routing and logic
 
 @app.route("/")
 def home():
-    return render_template('home.html')
+    return render_template('home.html', lexers=LEXERS)
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    title = request.form['title']
-    content = request.form['pastecontent']
-    paste_name = rand_name()
+    data = {
+        'title': request.form['title'],
+        'content': request.form['pastecontent'],
+        'hl_alias': request.form['hl'],
+        'name': rand_name()
+    }
+
     try:
-        register_paste(paste_name, content, title)
-        return redirect(url_for('view_paste', paste_name=paste_name))
+        register_paste(data)
+        return redirect(url_for('view_paste', paste_name=data['name']))
     except PPasteException:
         abort(500)
 
@@ -80,8 +89,8 @@ def view_paste(paste_name=''):
         redirect(url_for('home'))
 
     try:
-        content = fetch_paste(paste_name)
-        resp = make_response(content, 200)
+        paste = fetch_paste(paste_name)
+        resp = make_response(paste['content'], 200)
         resp.headers['Content-Type'] = 'text/plain'
         return resp
     except PPasteException:
