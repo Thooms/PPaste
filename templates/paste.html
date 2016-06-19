@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ paste['title'] }}{% endblock %}
+{% block title %}{{ paste['title'] }} {% endblock %}
 
 {% block additional_css %}
 <style>{{ css }}</style>
@@ -8,6 +8,9 @@
 
 {% block main %}
 <div class="container">
+  <div class="6 columns">
+    <p><a href="{{ raw_url }}">Raw version</a></p>
+  </div>
   {{ content|safe }}
 </div>
 {% endblock %}

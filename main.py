@@ -90,7 +90,7 @@ def submit():
     except PPasteException:
         abort(500)
 
-@app.route('/paste/<paste_name>', methods=['GET'])
+@app.route('/paste/<string:paste_name>', methods=['GET'])
 def view_paste(paste_name=''):
     if not paste_name:
         redirect(url_for('home'))
@@ -98,7 +98,26 @@ def view_paste(paste_name=''):
     try:
         paste = fetch_paste(paste_name)
         highlighted_content, css = highlight_paste(paste)
-        return render_template('paste.html', paste=paste, content=highlighted_content, css=css)
+        return render_template(
+            'paste.html',
+            paste=paste,
+            content=highlighted_content,
+            css=css,
+            raw_url=url_for('view_paste_raw', paste_name=paste_name)
+        )
+    except PPasteException:
+        abort(404)
+
+@app.route('/paste/<string:paste_name>/raw', methods=['GET'])
+def view_paste_raw(paste_name=''):
+    if not paste_name:
+        redirect(url_for('home'))
+
+    try:
+        paste = fetch_paste(paste_name)
+        resp = make_response(paste['content'], 200)
+        resp.headers['Content-Type'] = 'text/plain'
+        return resp
     except PPasteException:
         abort(404)
 
