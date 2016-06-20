@@ -78,7 +78,7 @@ def fetch_pastes_list():
     check_pastes_directory()
 
     return (
-        {'name': f}
+        fetch_paste(f)
         for f in os.listdir(PASTE_LOCATION)
     )
 

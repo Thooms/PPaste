@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% block title %}Submit your code!{% endblock %}
+
 {% block main %}
 <div class="container">
   <form action="{{ url_for('submit') }}" method="POST">
