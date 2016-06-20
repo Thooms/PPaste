@@ -6,8 +6,20 @@ from pygments.lexers import get_all_lexers, get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 from pygments import highlight
 import json
+import logging
 
 app = Flask(__name__)
+
+# Logging
+
+log_handler = logging.StreamHandler()
+log_formatter = logging.Formatter(
+    '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+log_handler.setFormatter(log_formatter)
+
+LOGGER = logging.getLogger()
+LOGGER.addHandler(log_handler)
+LOGGER.setLevel(logging.INFO)
 
 # Custom exception
 
@@ -42,7 +54,7 @@ def register_paste(paste_data):
 
     try:
         json.dump(paste_data, open(paste_path, 'w'))
-    except OSError(e):
+    except OSError as e:
         raise PPasteException('Cannot register paste - {}'.format(e))
 
 def fetch_paste(name):
@@ -57,7 +69,7 @@ def fetch_paste(name):
 
     try:
         return json.load(open(paste_path, 'r'))
-    except OSError(e):
+    except OSError as e:
         raise PPasteException('Cannot register paste - {}'.format(e))
 
 def fetch_pastes_list():
@@ -97,7 +109,8 @@ def submit():
     try:
         register_paste(data)
         return redirect(url_for('view_paste', paste_name=data['name']))
-    except PPasteException:
+    except PPasteException as e:
+        LOGGER.error(e)
         abort(500)
 
 @app.route('/paste/<string:paste_name>', methods=['GET'])
@@ -116,7 +129,7 @@ def view_paste(paste_name=''):
             raw_url=url_for('view_paste_raw', paste_name=paste_name)
         )
     except PPasteException:
-        abort(404)
+        abort(500)
 
 @app.route('/paste/<string:paste_name>/raw', methods=['GET'])
 def view_paste_raw(paste_name=''):
@@ -128,15 +141,17 @@ def view_paste_raw(paste_name=''):
         resp = make_response(paste['content'], 200)
         resp.headers['Content-Type'] = 'text/plain'
         return resp
-    except PPasteException:
-        abort(404)
+    except PPasteException as e:
+        LOGGER.error(e)
+        abort(500)
 
 @app.route('/pastes', methods=['GET'])
 def list_pastes():
     try:
         pastes = fetch_pastes_list()
         return render_template('pastes.html', pastes=pastes)
-    except PPasteException:
+    except PPasteException as e:
+        LOGGER.error(e)
         abort(500)
 
 if __name__ == "__main__":
