@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}All the pastes{% endblock %}
+
+{% block main %}
+<div class="container">
+    <table class="u-full-width">
+	<thead>
+	    <tr>
+		<th>Paste</th>
+	    </tr>
+	</thead>
+
+	<tbody>
+	    {% for paste in pastes %}
+	    <tr>
+		<td>
+		    <a href="{{ url_for('view_paste', paste_name=paste['name']) }}">
+			{{ paste['name'] }}
+		    </a>
+		</td>
+	    </tr>
+	    {% endfor %}
+	</tbody>
+    </table>
+</div>
+{% endblock %}

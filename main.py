@@ -60,6 +60,16 @@ def fetch_paste(name):
     except OSError(e):
         raise PPasteException('Cannot register paste - {}'.format(e))
 
+def fetch_pastes_list():
+    '''Fetch the list of pastes.'''
+
+    check_pastes_directory()
+
+    return (
+        {'name': f}
+        for f in os.listdir(PASTE_LOCATION)
+    )
+
 # Syntax highlighting management
 
 LEXERS = sorted(get_all_lexers(), key=lambda l: l[0].lower())
@@ -120,6 +130,14 @@ def view_paste_raw(paste_name=''):
         return resp
     except PPasteException:
         abort(404)
+
+@app.route('/pastes', methods=['GET'])
+def list_pastes():
+    try:
+        pastes = fetch_pastes_list()
+        return render_template('pastes.html', pastes=pastes)
+    except PPasteException:
+        abort(500)
 
 if __name__ == "__main__":
     app.run()
