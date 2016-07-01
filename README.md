@@ -4,8 +4,9 @@
 
 ```
 $ mkdir pastes # directory that will store the paste files
-$ python main.py
+$ python main.py --port=<port>
 ```
+You can always `python main.py -h` to see some help.
 
 ## Notes
 

@@ -1,3 +1,4 @@
+import argparse
 import os
 import random
 import string
@@ -190,4 +191,18 @@ def list_pastes():
         abort(500)
 
 if __name__ == '__main__':
-    app.run()
+    parser = argparse.ArgumentParser(
+        description='PPaste - The only pastebin you need <3'
+    )
+
+    parser.add_argument(
+        '--port',
+        type=int,
+        nargs=1,
+        help='The port on which to listen (default: 4242)',
+        default=4242
+    )
+
+    args = parser.parse_args()
+
+    app.run(port=args.port[0])
