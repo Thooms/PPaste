@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ paste['title'] }} {% endblock %}
+{% block title %}
+{{ paste['title'] }}
+{% if paste['is_private'] %}<small class="u-pull-right">[PRIVATE]</small>{% endif%}
+{% endblock %}
 
 {% block additional_css %}
 <style>{{ css }}</style>

@@ -106,12 +106,16 @@ def fetch_paste(name):
 
 @check_pastes_directory
 def fetch_pastes_list():
-    '''Fetch the list of pastes.'''
+    '''Fetch the list of pastes. Does not return the private pastes.
+    Please not that pastes that do not include the is_private flag are
+    considered public by default.
+    '''
 
-    return (
-        fetch_paste(f)
-        for f in os.listdir(PASTE_LOCATION)
+    return filter(
+        lambda paste: not paste.get('is_private'),
+        (fetch_paste(f) for f in os.listdir(PASTE_LOCATION))
     )
+
 
 
 def highlight_paste(paste):
@@ -135,6 +139,7 @@ def submit():
         'title': request.form.get('title'),
         'content': request.form.get('pastecontent'),
         'hl_alias': request.form.get('hl'),
+        'is_private': True if request.form.get('privatepaste') else False,
         'name': rand_name()
     }
 
