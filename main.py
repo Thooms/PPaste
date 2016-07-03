@@ -204,5 +204,6 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()
+    port = args.port if isinstance(args.port, int) else args.port[0]
 
-    app.run(port=args.port[0])
+    app.run(port=port)
