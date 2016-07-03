@@ -14,14 +14,17 @@
 	<label for="hl">Language</label>
 	<select name="hl" class="u-full-width" id="hl">
 	  {% for lexer in lexers %}
-	  <option value="{{ lexer[1][0] }}">{{ lexer[0] }}</option>
+	  <option value="{{ lexer[1][0] }}"
+		  {% if lexer[0] == "Text only" %}selected{% endif %}>
+	    {{ lexer[0] }}
+	  </option>
 	  {% endfor %}
 	</select>
       </div>
     </div>
 
     <label for="content">Your code</label>
-    <textarea class="u-full-width" rows="50" cols="80" name="pastecontent" placeholder="Put your code here" id="content" autofocus></textarea>
+    <textarea class="u-full-width" name="pastecontent" placeholder="Put your code here" id="content" autofocus style="min-height: 200px;"></textarea>
 
     <input class="button-primary" type="submit" value="Go!">
   </form>
