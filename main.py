@@ -1,8 +1,4 @@
 import argparse
-import os
-import random
-import string
-import json
 import logging
 
 from flask import (
@@ -18,10 +14,11 @@ from pygments.lexers import get_all_lexers, get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 from pygments import highlight
 
+import ppaste_lib
+
 
 app = Flask(__name__)
 
-# Logging configuration
 
 log_handler = logging.StreamHandler()
 log_formatter = logging.Formatter(
@@ -32,98 +29,16 @@ LOGGER = logging.getLogger()
 LOGGER.addHandler(log_handler)
 LOGGER.setLevel(logging.INFO)
 
-# Pastes management configuration
-
-ALPHABET = list(string.ascii_uppercase) + list(string.digits)
-PASTE_NAME_LEN = 6
-PASTE_LOCATION = os.path.join(os.getcwd(), 'pastes')
-
-# Lexers configuration
 
 LEXERS = sorted(get_all_lexers(), key=lambda l: l[0].lower())
 
 
-def rand_name():
-    '''Returns a random paste name'''
-    return ''.join(random.choice(ALPHABET) for _ in range(PASTE_NAME_LEN))
-
-
-class PPasteException(Exception):
-    '''Custom exception'''
-
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-
-def check_pastes_directory(f):
-    '''
-    Decorator that raises an exception if the pastes directory
-    doesn't exists
-    '''
-    def wrapper(*args, **kwargs):
-        if not os.path.isdir(PASTE_LOCATION):
-            raise PPasteException(
-                'Pastes directory ({}) does not exist'.format(PASTE_LOCATION))
-        return f(*args, **kwargs)
-
-    return wrapper
-
-
-@check_pastes_directory
-def register_paste(paste_data):
-    '''Saves a paste into the filesystem. Raise an error if not possible.'''
-
-    paste_path = os.path.join(PASTE_LOCATION, paste_data['name'])
-
-    if os.path.exists(paste_path):
-        raise PPasteException(
-            'Paste file ({}) already exists'.format(paste_path))
-
-    try:
-        json.dump(paste_data, open(paste_path, 'w'))
-    except OSError as e:
-        raise PPasteException('Cannot register paste - {}'.format(e))
-
-
-@check_pastes_directory
-def fetch_paste(name):
-    '''Fetches a paste by name in the filesystem.'''
-
-    paste_path = os.path.join(PASTE_LOCATION, name)
-
-    if not os.path.exists(paste_path):
-        raise PPasteException(
-            'Paste file ({}) does not exists'.format(paste_path))
-
-    try:
-        return json.load(open(paste_path, 'r'))
-    except OSError as e:
-        raise PPasteException('Cannot register paste - {}'.format(e))
-
-
-@check_pastes_directory
-def fetch_pastes_list():
-    '''Fetch the list of pastes. Does not return the private pastes.
-    Please not that pastes that do not include the is_private flag are
-    considered public by default.
-    '''
-
-    return filter(
-        lambda paste: not paste.get('is_private'),
-        (fetch_paste(f) for f in os.listdir(PASTE_LOCATION))
-    )
-
-
-
 def highlight_paste(paste):
     '''Use pygments to syntax highlight a paste, returns by the way the CSS'''
-    lexer = get_lexer_by_name(paste['hl_alias'])
+    lexer = get_lexer_by_name(paste.hl_alias)
     formatter = HtmlFormatter(linenos=True, cssclass='source')
     return (
-        highlight(paste['content'], lexer, formatter),
+        highlight(paste.content, lexer, formatter),
         formatter.get_style_defs('.source')
     )
 
@@ -135,18 +50,16 @@ def home():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    data = {
-        'title': request.form.get('title'),
-        'content': request.form.get('pastecontent'),
-        'hl_alias': request.form.get('hl'),
-        'is_private': True if request.form.get('privatepaste') else False,
-        'name': rand_name()
-    }
-
+    paste = ppaste_lib.Paste(
+        title=request.form.get('title'),
+        content=request.form.get('pastecontent'),
+        hl_alias=request.form.get('hl'),
+        is_private=True if request.form.get('privatepaste') else False
+    )
     try:
-        register_paste(data)
-        return redirect(url_for('view_paste', paste_name=data['name']))
-    except PPasteException as e:
+        paste.save()
+        return redirect(url_for('view_paste', paste_name=paste.name))
+    except ppaste_lib.PPasteException as e:
         LOGGER.error(e)
         abort(500)
 
@@ -157,7 +70,7 @@ def view_paste(paste_name=''):
         redirect(url_for('home'))
 
     try:
-        paste = fetch_paste(paste_name)
+        paste = ppaste_lib.PasteManager.fetch_paste(paste_name)
         highlighted_content, css = highlight_paste(paste)
         return render_template(
             'paste.html',
@@ -166,7 +79,7 @@ def view_paste(paste_name=''):
             css=css,
             raw_url=url_for('view_paste_raw', paste_name=paste_name)
         )
-    except PPasteException as e:
+    except ppaste_lib.PPasteException as e:
         LOGGER.error(e)
         abort(500)
 
@@ -177,11 +90,11 @@ def view_paste_raw(paste_name=''):
         redirect(url_for('home'))
 
     try:
-        paste = fetch_paste(paste_name)
-        resp = make_response(paste['content'], 200)
+        paste = ppaste_lib.PasteManager.fetch_paste(paste_name)
+        resp = make_response(paste.content, 200)
         resp.headers['Content-Type'] = 'text/plain'
         return resp
-    except PPasteException as e:
+    except ppaste_lib.PPasteException as e:
         LOGGER.error(e)
         abort(500)
 
@@ -189,9 +102,9 @@ def view_paste_raw(paste_name=''):
 @app.route('/pastes', methods=['GET'])
 def list_pastes():
     try:
-        pastes = fetch_pastes_list()
+        pastes = ppaste_lib.PasteManager.fetch_public_pastes()
         return render_template('pastes.html', pastes=pastes)
-    except PPasteException as e:
+    except ppaste_lib.PPasteException as e:
         LOGGER.error(e)
         abort(500)
 
