@@ -2,6 +2,7 @@ import json
 import os
 import random
 import string
+import time
 
 
 class PPasteException(Exception):
@@ -73,7 +74,8 @@ class PasteManager:
                 content=d['content'],
                 hl_alias=d['hl_alias'],
                 is_private=d['is_private'],
-                name=name
+                date=d['date'],
+                name=name,
             )
         except OSError as e:
             raise PPasteException('Cannot load file {} - {}'.format(
@@ -83,24 +85,29 @@ class PasteManager:
 
     @check_pastes_directory
     def fetch_public_pastes():
-        return filter(
-            lambda p: not p.is_private,
-            (PasteManager.fetch_paste(name)
-             for name
-             in os.listdir(PasteManager.PASTE_LOCATION))
+        return sorted(
+            filter(
+                lambda p: not p.is_private,
+                (PasteManager.fetch_paste(name)
+                 for name
+                 in os.listdir(PasteManager.PASTE_LOCATION))
+            ),
+            key=lambda p: -p.date
         )
 
 
 class Paste:
 
     def __init__(self, title='', content='', hl_alias='',
-                 is_private=False, name=None):
+                 is_private=False, name=None, date=None):
         self.title = title or ''
         self.content = content or ''
         self.hl_alias = hl_alias or 'Text only'
         self.is_private = is_private
         self.name = PasteManager.get_rand_paste_name() \
             if name is None else name
+        self.date = int(time.time()) \
+            if date is None else date
 
     def get_dict(self):
         return {
@@ -108,7 +115,8 @@ class Paste:
             'content': self.content,
             'hl_alias': self.hl_alias,
             'is_private': self.is_private,
-            'name': self.name
+            'name': self.name,
+            'date': self.date
         }
 
     @PasteManager.check_pastes_directory
