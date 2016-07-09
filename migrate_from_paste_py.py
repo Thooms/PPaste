@@ -23,7 +23,12 @@ if __name__ == '__main__':
     for f in files:
         original_id = f.split('/')[-1]
         content = open(f, 'r').read()
-        hl = re.search(r'V(\w+)', open('{}.meta'.format(f), 'r').read()).group(0)[1:]
+        hl_candidate = re.search(r'V(\w+)', open('{}.meta'.format(f), 'r').read())
+        if hl_candidate is not None:
+            hl = hl_candidate.group(0)[1:]
+        else:
+            hl = 'text'
+
         p = ppaste_lib.Paste(
             'Imported paste (original ID: {})'.format(original_id),
             content,
