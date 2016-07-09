@@ -28,6 +28,7 @@ if __name__ == '__main__':
             'Imported paste (original ID: {})'.format(original_id),
             content,
             hl,
+            name=original_id,
             is_private=True
         )
         p.save()
