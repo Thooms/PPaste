@@ -51,7 +51,8 @@ class PasteManager:
             raise PPasteException('Paste file {} already exists'.format(path))
 
         try:
-            json.dump(paste.get_dict(), open(path, 'w'))
+            with open(path, 'w') as f:
+                json.dump(paste.get_dict(), f)
         except OSError as e:
             raise PPasteException('Cannot write file {} - {}'.format(
                 path,
@@ -67,16 +68,17 @@ class PasteManager:
                 'Paste file {} does not exists'.format(path))
 
         try:
-            d = json.load(open(path, 'r'))
+            with open(path, 'r') as f:
+                d = json.load(f)
 
-            return Paste(
-                title=d['title'],
-                content=d['content'],
-                hl_alias=d['hl_alias'],
-                is_private=d['is_private'],
-                date=d['date'],
-                name=name,
-            )
+                return Paste(
+                    title=d['title'],
+                    content=d['content'],
+                    hl_alias=d['hl_alias'],
+                    is_private=d['is_private'],
+                    date=d['date'],
+                    name=name,
+                )
         except OSError as e:
             raise PPasteException('Cannot load file {} - {}'.format(
                 path,
