@@ -45,6 +45,15 @@ def highlight_paste(paste, hl_lines):
 
 
 def parse_hl(hl):
+    """
+    Parse the hl arg of the query string into a list of line's number.
+
+    hl is a string representing a list of number or range separated by space.
+    A range is two numbers separated by a '-' (Example: '40-43')
+
+    Example: parse_hl('1 2 3 40-43') == [1, 2, 3, 40, 41, 42, 43]
+    """
+
     if hl is None:
         return []
 
@@ -53,7 +62,7 @@ def parse_hl(hl):
 
     lines = []
     for raw_query in hl.split(' '):
-        if '-' in raw_query:
+        if '-' in raw_query:  # Add the range into the lines list
             i = raw_query.index('-')
             lines.extend(range(int(raw_query[:i]), int(raw_query[i + 1:]) + 1))
         else:
