@@ -1,5 +1,6 @@
 import argparse
 import logging
+import re
 
 from flask import (
     Flask,
@@ -33,14 +34,40 @@ LOGGER.setLevel(logging.INFO)
 LEXERS = sorted(get_all_lexers(), key=lambda l: l[0].lower())
 
 
-def highlight_paste(paste):
+def highlight_paste(paste, hl_lines):
     '''Use pygments to syntax highlight a paste, returns by the way the CSS'''
     lexer = get_lexer_by_name(paste.hl_alias)
-    formatter = HtmlFormatter(linenos=True, cssclass='source')
+    formatter = HtmlFormatter(linenos=True, cssclass='source', hl_lines=hl_lines)
     return (
         highlight(paste.content, lexer, formatter),
         formatter.get_style_defs('.source')
     )
+
+
+def parse_hl(hl):
+    """
+    Parse the hl arg of the query string into a list of line's number.
+
+    hl is a string representing a list of number or range separated by space.
+    A range is two numbers separated by a '-' (Example: '40-43')
+
+    Example: parse_hl('1 2 3 40-43') == [1, 2, 3, 40, 41, 42, 43]
+    """
+
+    if hl is None:
+        return []
+
+    if not re.match(r"\d+|(\d+-\d+)( \d+|(\d+-\d+))*", hl):
+        abort(400)
+
+    lines = []
+    for raw_query in hl.split(' '):
+        if '-' in raw_query:  # Add the range into the lines list
+            i = raw_query.index('-')
+            lines.extend(range(int(raw_query[:i]), int(raw_query[i + 1:]) + 1))
+        else:
+            lines.append(int(raw_query))
+    return lines
 
 
 @app.route('/')
@@ -69,9 +96,10 @@ def view_paste(paste_name=''):
     if not paste_name:
         redirect(url_for('home'))
 
+    hl_lines = parse_hl(request.args.get('ln'))
     try:
         paste = ppaste_lib.PasteManager.fetch_paste(paste_name)
-        highlighted_content, css = highlight_paste(paste)
+        highlighted_content, css = highlight_paste(paste, hl_lines)
         return render_template(
             'paste.html',
             paste=paste,
