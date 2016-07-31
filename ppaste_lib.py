@@ -21,19 +21,15 @@ class PasteManager:
     PASTE_LOCATION = os.path.join(os.getcwd(), 'pastes')
 
     @classmethod
-    def check_pastes_directory(cls, f):
+    def check_pastes_directory(cls):
         '''
-        Decorator that raises an exception if the pastes directory
+        Check function that raises an exception if the pastes directory
         doesn't exists
         '''
-        def wrapper(*args, **kwargs):
-            if not os.path.isdir(cls.PASTE_LOCATION):
-                raise PPasteException(
-                    'Pastes directory ({}) does not exist'.format(
-                        cls.PASTE_LOCATION))
-            return f(*args, **kwargs)
-
-        return wrapper
+        if not os.path.isdir(cls.PASTE_LOCATION):
+            raise PPasteException(
+                'Pastes directory ({}) does not exist'.format(
+                    cls.PASTE_LOCATION))
 
     @classmethod
     def get_rand_paste_name(cls):
@@ -46,9 +42,11 @@ class PasteManager:
     def craft_paste_path(cls, paste_name):
         return os.path.join(cls.PASTE_LOCATION, paste_name)
 
-    @check_pastes_directory
+    @classmethod
     def save_paste(cls, paste):
-        path = cls.craft_paste_path(cls, paste.name)
+        cls.check_pastes_directory()
+
+        path = cls.craft_paste_path(paste.name)
 
         if os.path.exists(path):
             raise PPasteException('Paste file {} already exists'.format(path))
@@ -62,8 +60,10 @@ class PasteManager:
                 e
             ))
 
-    @check_pastes_directory
+    @classmethod
     def fetch_paste(cls, name):
+        cls.check_pastes_directory()
+
         path = cls.craft_paste_path(name)
 
         if not os.path.exists(path):
@@ -88,8 +88,10 @@ class PasteManager:
                 e
             ))
 
-    @check_pastes_directory
+    @classmethod
     def fetch_public_pastes(cls):
+        cls.check_pastes_directory()
+
         return sorted(
             filter(
                 lambda p: not p.is_private,
@@ -124,6 +126,7 @@ class Paste:
             'date': self.date
         }
 
-    @PasteManager.check_pastes_directory
     def save(self):
+        PasteManager.check_pastes_directory()
+
         PasteManager.save_paste(self)
