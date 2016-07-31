@@ -20,32 +20,35 @@ class PasteManager:
     ALPHABET = list(string.ascii_uppercase) + list(string.digits)
     PASTE_LOCATION = os.path.join(os.getcwd(), 'pastes')
 
-    def check_pastes_directory(f):
+    @classmethod
+    def check_pastes_directory(cls, f):
         '''
         Decorator that raises an exception if the pastes directory
         doesn't exists
         '''
         def wrapper(*args, **kwargs):
-            if not os.path.isdir(PasteManager.PASTE_LOCATION):
+            if not os.path.isdir(cls.PASTE_LOCATION):
                 raise PPasteException(
                     'Pastes directory ({}) does not exist'.format(
-                        PasteManager.PASTE_LOCATION))
+                        cls.PASTE_LOCATION))
             return f(*args, **kwargs)
 
         return wrapper
 
-    def get_rand_paste_name():
+    @classmethod
+    def get_rand_paste_name(cls):
         return ''.join(
-            random.choice(PasteManager.ALPHABET)
-            for _ in range(PasteManager.NAME_LEN)
+            random.choice(cls.ALPHABET)
+            for _ in range(cls.NAME_LEN)
         )
 
-    def craft_paste_path(paste_name):
-        return os.path.join(PasteManager.PASTE_LOCATION, paste_name)
+    @classmethod
+    def craft_paste_path(cls, paste_name):
+        return os.path.join(cls.PASTE_LOCATION, paste_name)
 
     @check_pastes_directory
-    def save_paste(paste):
-        path = PasteManager.craft_paste_path(paste.name)
+    def save_paste(cls, paste):
+        path = cls.craft_paste_path(cls, paste.name)
 
         if os.path.exists(path):
             raise PPasteException('Paste file {} already exists'.format(path))
@@ -60,8 +63,8 @@ class PasteManager:
             ))
 
     @check_pastes_directory
-    def fetch_paste(name):
-        path = PasteManager.craft_paste_path(name)
+    def fetch_paste(cls, name):
+        path = cls.craft_paste_path(name)
 
         if not os.path.exists(path):
             raise PPasteException(
@@ -86,13 +89,13 @@ class PasteManager:
             ))
 
     @check_pastes_directory
-    def fetch_public_pastes():
+    def fetch_public_pastes(cls):
         return sorted(
             filter(
                 lambda p: not p.is_private,
-                (PasteManager.fetch_paste(name)
+                (cls.fetch_paste(name)
                  for name
-                 in os.listdir(PasteManager.PASTE_LOCATION))
+                 in os.listdir(cls.PASTE_LOCATION))
             ),
             key=lambda p: -p.date
         )
