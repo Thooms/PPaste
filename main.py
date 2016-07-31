@@ -12,7 +12,7 @@ from flask import (
     url_for
 )
 from pygments.lexers import get_all_lexers, get_lexer_by_name
-from pygments.formatters import HtmlFormatter
+from pygments.formatters.html import HtmlFormatter
 from pygments import highlight
 
 import ppaste_lib
