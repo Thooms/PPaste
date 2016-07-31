@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 import random
@@ -130,3 +131,8 @@ class Paste:
         PasteManager.check_pastes_directory()
 
         PasteManager.save_paste(self)
+
+    def pprint_date(self):
+        return datetime.datetime.fromtimestamp(
+            int(self.date)
+        ).strftime('%Y-%m-%d %H:%M')

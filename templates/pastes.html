@@ -10,7 +10,7 @@
 		<th>Paste</th>
 		<th>Title</th>
 		<th>Language</th>
-		<th>Date (in epoch)</th>
+		<th>Date</th>
 	    </tr>
 	</thead>
 
@@ -24,7 +24,7 @@
 		</td>
 		<td><em>{{ paste.title }}</em></td>
 		<td>{{ paste.hl_alias }}</td>
-		<td>{{ paste.date }}</td>
+		<td>{{ paste.pprint_date() }}</td>
 	    </tr>
 	    {% endfor %}
 	</tbody>
