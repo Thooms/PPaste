@@ -110,7 +110,9 @@ class Paste:
                  is_private=False, name=None, date=None):
         self.title = title or ''
         self.content = content or ''
-        self.hl_alias = hl_alias or 'Text only'
+        # When no highlighting is specified, we default it to text so that
+        # fragments can work properly
+        self.hl_alias = hl_alias or 'text'
         self.is_private = is_private
         self.name = PasteManager.get_rand_paste_name() \
             if name is None else name
