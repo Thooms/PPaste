@@ -3,8 +3,8 @@
   <head>
     <title>PPaste!</title>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='skeleton.css') }}">
 
     {% block additional_css %}{% endblock %}
   </head>
