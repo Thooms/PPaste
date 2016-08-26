@@ -69,10 +69,41 @@ def parse_hl(hl):
             lines.append(int(raw_query))
     return lines
 
+def can_track():
+    """
+    Analyzes the DHT HTTP header, and returns whether the user allows us to
+    track them.
+
+    Even though DNT is not a standard HTTP header yet, it can be configured in
+    most of the major browsers.
+    DNT stands for "Do Not Track". Its value is either 0 (track me), or 1 (do
+    not track me). If the header is not sent, it is up to the server to decide
+    if the user is to be tracked or not.
+    You can find more info at the following links:
+     - https://www.w3.org/TR/tracking-dnt/
+     - https://en.wikipedia.org/wiki/Do_Not_Track
+
+    This value returns True unless the user explicitely refuses us to track
+    them. Bogus values, and empty headers are therefore considered as a
+    consentment to being tracked.
+    """
+    # Default value (if no header sent, or if invalid header)
+    track = True
+    DNT = request.headers.get("DNT")
+
+    # DNT = 0 → User consents to being tracked
+    if (DNT == "0"):
+      track = True
+
+    # DNT = 1 → User does not want to be tracked
+    if (DNT == "1"):
+      track = False
+
+    return track
 
 @app.route('/')
 def home():
-    return render_template('home.html', lexers=LEXERS)
+    return render_template('home.html', lexers=LEXERS, track=can_track())
 
 
 @app.route('/submit', methods=['POST'])
@@ -105,7 +136,8 @@ def view_paste(paste_name=''):
             paste=paste,
             content=highlighted_content,
             css=css,
-            raw_url=url_for('view_paste_raw', paste_name=paste_name)
+            raw_url=url_for('view_paste_raw', paste_name=paste_name),
+            track=can_track()
         )
     except ppaste_lib.PPasteException as e:
         LOGGER.error(e)
