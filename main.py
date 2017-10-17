@@ -152,7 +152,7 @@ def view_paste_raw(paste_name=''):
     try:
         paste = ppaste_lib.PasteManager.fetch_paste(paste_name)
         resp = make_response(paste.content, 200)
-        resp.headers['Content-Type'] = 'text/plain'
+        resp.headers['Content-Type'] = 'text/plain;charset=utf-8'
         return resp
     except ppaste_lib.PPasteException as e:
         LOGGER.error(e)
